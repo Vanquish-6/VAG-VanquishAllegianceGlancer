@@ -2,6 +2,10 @@
 
 VAG is a lightweight, browser-based tool for viewing and analyzing Asheron's Call allegiance hierarchies. It provides a clean, visual representation of allegiance structures with the ability to easily identify online and offline members.
 
+## Purpose
+
+VAG takes the `scanresult.json` output from [AllegianceSkimmer](https://github.com/amoeba/AllegianceSkimmer) (a Decal plugin for Asheron's Call) and presents the allegiance data in a cleaner, more user-friendly format. While AllegianceSkimmer handles the collection of allegiance data, VAG focuses on visualization and analysis of that data.
+
 ## Features
 
 - **Hierarchical Tree View**: Displays the complete allegiance structure in a clean, vertical tree layout
@@ -15,15 +19,18 @@ VAG is a lightweight, browser-based tool for viewing and analyzing Asheron's Cal
 
 ## How to Use
 
-1. **Download the Files**:
-   - Save `VAG.html` to your computer
-   - Have your `scanresult.json` file ready (exported from Asheron's Call)
+1. **Get the scanresult.json file**:
+   - Use [AllegianceSkimmer](https://github.com/amoeba/AllegianceSkimmer) to scan your allegiance in Asheron's Call
+   - Save the generated `scanresult.json` file
 
-2. **Open the Viewer**:
+2. **Download VAG**:
+   - Save `VAG.html` to your computer
+
+3. **Open the Viewer**:
    - Double-click on `VAG.html` to open it in your web browser
    - Click the "Choose File" button to select your `scanresult.json` file
 
-3. **View Your Allegiance**:
+4. **View Your Allegiance**:
    - The hierarchy will automatically load and display
    - Use the buttons to expand/collapse branches, filter for online players, etc.
    - Use the search box to find specific members
@@ -38,11 +45,11 @@ VAG is a lightweight, browser-based tool for viewing and analyzing Asheron's Cal
 ## Requirements
 
 - Any modern web browser (Chrome, Firefox, Edge, Safari)
-- A valid `scanresult.json` file from Asheron's Call
+- A valid `scanresult.json` file from AllegianceSkimmer
 
 ## JSON Format
 
-The allegiance data should be in the following format:
+The allegiance data from AllegianceSkimmer should be in the following format:
 
 ```json
 {
