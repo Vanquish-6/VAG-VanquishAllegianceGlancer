@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VAG - Vanquish Allegiance Glancer</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f6f8fa;
+            color: #24292e;
+            line-height: 1.5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 24px auto;
+            background-color: #fff;
+            padding: 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        h1, h2 {
+            color: #24292e;
+            margin-top: 0;
+        }
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            border-bottom: 1px solid #eaecef;
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+        }
+        h2 {
+            font-size: 1.4rem;
+            font-weight: 500;
+        }
+        .stats {
+            background-color: #f1f8ff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            border: 1px solid #e1e4e8;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 16px;
+        }
+        .stat-card {
+            background-color: #fff;
+            padding: 16px;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            border: 1px solid #e1e4e8;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+        }
+        .tree-container {
+            margin-top: 24px;
+            border: 1px solid #e1e4e8;
+            border-radius: 8px;
+            padding: 16px;
+            overflow: auto;
+            max-height: 600px;
+            background-color: #fff;
+        }
+        /* Vertical tree layout */
+        .node {
+            position: relative;
+            margin: 10px 0;
+            padding: 8px;
+            border-radius: 6px;
+            transition: background-color 0.2s;
+        }
+        .online {
+            background-color: #e6ffed;
+            color: #22863a;
+            border-left: 3px solid #28a745;
+        }
+        .offline {
+            background-color: #fafbfc;
+            color: #586069;
+            border-left: 3px solid #dfe2e5;
+        }
+        .node:hover {
+            background-color: #f8f9fa;
+        }
+        .node-content {
+            cursor: pointer;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+        }
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 10px;
+        }
+        .online .status-indicator {
+            background-color: #28a745;
+            box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.2);
+        }
+        .offline .status-indicator {
+            background-color: #959da5;
+        }
+        .children {
+            margin-left: 40px;
+            position: relative;
+        }
+        .children::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -20px;
+            height: 100%;
+            border-left: 1px solid #e1e4e8;
+        }
+        .node > .node-content::before {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: -20px;
+            width: 20px;
+            border-top: 1px solid #e1e4e8;
+        }
+        .node:first-child > .node-content::before {
+            top: 50%;
+        }
+        .node:last-child > .node-content::before {
+            top: 50%;
+        }
+        .collapse-btn {
+            cursor: pointer;
+            margin-right: 8px;
+            font-size: 0.75rem;
+            width: 18px;
+            height: 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f6f8fa;
+            border-radius: 4px;
+            z-index: 1;
+            border: 1px solid #e1e4e8;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+        .collapse-btn:hover {
+            background-color: #f0f3f7;
+            border-color: #cfd3d9;
+        }
+        .search-box {
+            margin-bottom: 20px;
+        }
+        #search {
+            padding: 10px 12px;
+            width: 300px;
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        #search:focus {
+            outline: none;
+            border-color: #0366d6;
+            box-shadow: 0 0 0 3px rgba(3, 102, 214, 0.2);
+        }
+        .highlight {
+            background-color: #fff8c5 !important;
+            color: #735c0f !important;
+            font-weight: 600;
+        }
+        .controls {
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        button {
+            background-color: #0366d6;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.2s, transform 0.1s;
+            display: inline-flex;
+            align-items: center;
+        }
+        button:hover {
+            background-color: #0256b9;
+            transform: translateY(-1px);
+        }
+        button:active {
+            transform: translateY(1px);
+        }
+        button:disabled {
+            background-color: #959da5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .file-input-container {
+            margin-bottom: 24px;
+            padding: 20px;
+            background-color: #f6f8fa;
+            border-radius: 8px;
+            border: 1px dashed #e1e4e8;
+            transition: border-color 0.2s, background-color 0.2s;
+        }
+        .file-input-container:hover {
+            border-color: #0366d6;
+            background-color: #f1f8ff;
+        }
+        .file-input-container p {
+            margin-top: 0;
+            margin-bottom: 12px;
+            color: #24292e;
+        }
+        #file-input {
+            margin-top: 10px;
+        }
+        
+        /* Online players list styling */
+        .online-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .online-list li {
+            padding: 10px;
+            border-bottom: 1px solid #eaecef;
+            display: flex;
+            align-items: center;
+            transition: background-color 0.2s;
+        }
+        .online-list li:last-child {
+            border-bottom: none;
+        }
+        .online-list li:hover {
+            background-color: #f6f8fa;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>VAG - Vanquish Allegiance Glancer</h1>
+        
+        <div class="file-input-container">
+            <p><strong>Select your scanresult.json file to load the allegiance data:</strong></p>
+            <input type="file" id="file-input" accept=".json">
+        </div>
+        
+        <div class="stats">
+            <h2>Allegiance Statistics</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div>Total Members: <span id="total-members">0</span></div>
+                </div>
+                <div class="stat-card">
+                    <div>Online Members: <span id="online-members">0</span></div>
+                </div>
+                <div class="stat-card">
+                    <div>Offline Members: <span id="offline-members">0</span></div>
+                </div>
+                <div class="stat-card">
+                    <div>Online Percentage: <span id="online-percentage">0%</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="search-box">
+            <input type="text" id="search" placeholder="Search for a player...">
+        </div>
+
+        <div class="controls">
+            <button id="expand-all">Expand All</button>
+            <button id="collapse-all">Collapse All</button>
+            <button id="list-online">List Online Players</button>
+            <button id="show-all">Show All</button>
+        </div>
+
+        <div class="tree-container" id="tree-view">
+            <div style="padding: 20px; text-align: center;">
+                <h3>Please select your scanresult.json file above to load your allegiance data</h3>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Function to calculate statistics
+        function calculateStats(data) {
+            const stats = {
+                totalMembers: 0,
+                onlineMembers: 0,
+                offlineMembers: 0
+            };
+
+            function traverse(node) {
+                stats.totalMembers++;
+                if (node.is_online) {
+                    stats.onlineMembers++;
+                } else {
+                    stats.offlineMembers++;
+                }
+
+                if (node.children && node.children.length > 0) {
+                    node.children.forEach(child => traverse(child));
+                }
+            }
+
+            traverse(data);
+            return stats;
+        }
+
+        // Function to update the statistics display
+        function updateStatsDisplay(stats) {
+            document.getElementById('total-members').textContent = stats.totalMembers;
+            document.getElementById('online-members').textContent = stats.onlineMembers;
+            document.getElementById('offline-members').textContent = stats.offlineMembers;
+            document.getElementById('online-percentage').textContent = 
+                `${((stats.onlineMembers / stats.totalMembers) * 100).toFixed(1)}%`;
+        }
+
+        // Function to render the tree view
+        function renderTree(data, container, isFiltered = false) {
+            const node = document.createElement('div');
+            node.className = `node ${data.is_online ? 'online' : 'offline'}`;
+            
+            const nodeContent = document.createElement('div');
+            nodeContent.className = 'node-content';
+            
+            // Add collapse button only if the node has children
+            if (data.children && data.children.length > 0) {
+                const collapseBtn = document.createElement('span');
+                collapseBtn.className = 'collapse-btn';
+                collapseBtn.textContent = '-';
+                collapseBtn.onclick = function(e) {
+                    e.stopPropagation();
+                    const childrenContainer = node.querySelector('.children');
+                    if (childrenContainer.style.display === 'none') {
+                        childrenContainer.style.display = 'block';
+                        collapseBtn.textContent = '-';
+                    } else {
+                        childrenContainer.style.display = 'none';
+                        collapseBtn.textContent = '+';
+                    }
+                };
+                nodeContent.appendChild(collapseBtn);
+            }
+
+            const statusIndicator = document.createElement('span');
+            statusIndicator.className = 'status-indicator';
+            nodeContent.appendChild(statusIndicator);
+            
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = `${data.name} ${data.is_online ? '(Online)' : '(Offline)'}`;
+            nodeContent.appendChild(nameSpan);
+            
+            node.appendChild(nodeContent);
+            
+            // Create container for children
+            if (data.children && data.children.length > 0) {
+                const childrenContainer = document.createElement('div');
+                childrenContainer.className = 'children';
+                
+                data.children.forEach(child => {
+                    renderTree(child, childrenContainer, isFiltered);
+                });
+                
+                node.appendChild(childrenContainer);
+            }
+            
+            container.appendChild(node);
+        }
+
+        // Function to filter the tree
+        function filterTree(query) {
+            const treeView = document.getElementById('tree-view');
+            treeView.innerHTML = '';
+            
+            if (!query) {
+                renderTree(allegianceData, treeView);
+                return;
+            }
+            
+            const lowercaseQuery = query.toLowerCase();
+            
+            // Helper function to check if a node or any of its descendants match the query
+            function nodeMatchesQuery(node) {
+                if (node.name.toLowerCase().includes(lowercaseQuery)) {
+                    return true;
+                }
+                
+                if (node.children && node.children.length > 0) {
+                    return node.children.some(child => nodeMatchesQuery(child));
+                }
+                
+                return false;
+            }
+            
+            // Create a filtered copy of the data
+            function createFilteredData(node) {
+                const nodeMatches = node.name.toLowerCase().includes(lowercaseQuery);
+                
+                // Create a copy of the node
+                const filteredNode = {
+                    name: node.name,
+                    is_online: node.is_online,
+                    children: []
+                };
+                
+                // Add matching children
+                if (node.children && node.children.length > 0) {
+                    node.children.forEach(child => {
+                        if (nodeMatchesQuery(child)) {
+                            filteredNode.children.push(createFilteredData(child));
+                        }
+                    });
+                }
+                
+                // Highlight the node if it matches the query
+                if (nodeMatches) {
+                    filteredNode.highlight = true;
+                }
+                
+                return filteredNode;
+            }
+            
+            // Create filtered data only if the root or any descendants match
+            if (nodeMatchesQuery(allegianceData)) {
+                const filteredData = createFilteredData(allegianceData);
+                renderTree(filteredData, treeView, true);
+                
+                // Expand all nodes in the filtered tree
+                document.querySelectorAll('.collapse-btn').forEach(btn => {
+                    const childrenContainer = btn.parentElement.parentElement.querySelector('.children');
+                    childrenContainer.style.display = 'block';
+                    btn.textContent = '-';
+                });
+                
+                // Highlight matching nodes
+                document.querySelectorAll('.node-content').forEach(nodeContent => {
+                    const name = nodeContent.textContent;
+                    if (name.toLowerCase().includes(lowercaseQuery)) {
+                        nodeContent.parentElement.classList.add('highlight');
+                    }
+                });
+            }
+        }
+
+        // Function to show only online members (with proper tree structure)
+        function showOnlineOnly() {
+            // First track which nodes have online descendants
+            const nodeHasOnlineDescendants = new WeakMap();
+            
+            function markNodesWithOnlineDescendants(node) {
+                if (!node || !(node instanceof Element)) return false;
+                
+                // Check if this is a node
+                if (node.classList && node.classList.contains('node')) {
+                    const isOnline = node.classList.contains('online');
+                    const children = node.querySelector('.children');
+                    
+                    let hasOnlineDescendants = isOnline;
+                    
+                    // Check children for online nodes
+                    if (children) {
+                        const childNodes = children.querySelectorAll(':scope > .node');
+                        for (const child of childNodes) {
+                            if (markNodesWithOnlineDescendants(child)) {
+                                hasOnlineDescendants = true;
+                            }
+                        }
+                    }
+                    
+                    nodeHasOnlineDescendants.set(node, hasOnlineDescendants);
+                    return hasOnlineDescendants;
+                }
+                return false;
+            }
+            
+            // Process the tree from root nodes
+            const treeRoot = document.getElementById('tree-view');
+            const rootNodes = treeRoot.querySelectorAll(':scope > .node');
+            rootNodes.forEach(node => markNodesWithOnlineDescendants(node));
+            
+            // Now show/hide nodes appropriately
+            document.querySelectorAll('.node').forEach(node => {
+                const hasOnline = nodeHasOnlineDescendants.get(node);
+                
+                if (hasOnline) {
+                    // Node has online members, show it
+                    node.style.display = 'block';
+                    
+                    // If it's not online itself, make it semi-transparent
+                    if (!node.classList.contains('online')) {
+                        node.style.opacity = '0.7';
+                    } else {
+                        node.style.opacity = '1';
+                    }
+                    
+                    // Make sure all parent containers are visible
+                    let parent = node.parentElement;
+                    while (parent) {
+                        if (parent.classList && parent.classList.contains('children')) {
+                            parent.style.display = 'block';
+                        } else if (parent.classList && parent.classList.contains('node')) {
+                            parent.style.display = 'block';
+                        }
+                        parent = parent.parentElement;
+                    }
+                } else {
+                    // No online members, hide it
+                    node.style.display = 'none';
+                }
+            });
+            
+            // Expand all branches with online members
+            document.querySelectorAll('.collapse-btn').forEach(btn => {
+                const nodeElement = btn.closest('.node');
+                if (nodeElement && nodeHasOnlineDescendants.get(nodeElement)) {
+                    const childrenContainer = nodeElement.querySelector('.children');
+                    if (childrenContainer) {
+                        childrenContainer.style.display = 'block';
+                        btn.textContent = '-';
+                    }
+                }
+            });
+            
+            // Update button states
+            document.querySelector('#expand-all').disabled = true;
+            document.querySelector('#collapse-all').disabled = false;
+            document.querySelector('#show-all').disabled = false;
+        }
+
+        // Function to show all members
+        function showAll() {
+            // Clear the tree view and rebuild it
+            const treeView = document.getElementById('tree-view');
+            treeView.innerHTML = '';
+            
+            // Rebuild the full tree
+            renderTree(allegianceData, treeView);
+            
+            // Set display and opacity for all nodes
+            document.querySelectorAll('.node').forEach(node => {
+                node.style.display = 'block';
+                node.style.opacity = '1'; // Reset opacity
+            });
+            
+            // Re-enable all buttons
+            document.querySelector('#expand-all').disabled = false;
+            document.querySelector('#collapse-all').disabled = false;
+            document.querySelector('#show-all').disabled = true;
+            document.querySelector('#list-online').disabled = false;
+        }
+
+        // Function to expand all nodes
+        function expandAll() {
+            document.querySelectorAll('.children').forEach(node => {
+                node.style.display = 'block';
+            });
+            document.querySelectorAll('.collapse-btn').forEach(btn => {
+                btn.textContent = '-';
+            });
+        }
+
+        // Function to collapse all nodes
+        function collapseAll() {
+            document.querySelectorAll('.children').forEach(node => {
+                node.style.display = 'none';
+            });
+            document.querySelectorAll('.collapse-btn').forEach(btn => {
+                btn.textContent = '+';
+            });
+        }
+
+        // Helper function to determine the level of a node in the tree
+        function getNodeLevel(node) {
+            let level = 0;
+            let parent = node.parentElement;
+            
+            while (parent) {
+                if (parent.className === 'children') {
+                    level++;
+                }
+                parent = parent.parentElement;
+            }
+            
+            return level;
+        }
+
+        // Global variable for allegiance data
+        let allegianceData = null;
+
+        // Function to show a flat list of online players
+        function listOnlinePlayers() {
+            // Clear the tree view
+            const treeView = document.getElementById('tree-view');
+            treeView.innerHTML = '';
+            
+            // Get all online players directly from the data
+            const onlinePlayers = [];
+            
+            // Recursive function to find all online players
+            function findOnlinePlayers(node) {
+                if (node.is_online) {
+                    onlinePlayers.push(node.name);
+                }
+                
+                if (node.children && node.children.length > 0) {
+                    node.children.forEach(child => findOnlinePlayers(child));
+                }
+            }
+            
+            // Start recursive search from the root
+            findOnlinePlayers(allegianceData);
+            
+            // Sort the players alphabetically
+            onlinePlayers.sort();
+            
+            // Create a simple list of online players
+            const listContainer = document.createElement('div');
+            listContainer.style.padding = '16px';
+            
+            if (onlinePlayers.length === 0) {
+                listContainer.innerHTML = '<p>No online players found.</p>';
+            } else {
+                const title = document.createElement('h3');
+                title.textContent = `Online Players (${onlinePlayers.length})`;
+                listContainer.appendChild(title);
+                
+                const list = document.createElement('ul');
+                list.className = 'online-list';
+                
+                onlinePlayers.forEach(playerName => {
+                    const listItem = document.createElement('li');
+                    
+                    // Add the green status indicator
+                    const statusIndicator = document.createElement('span');
+                    statusIndicator.className = 'status-indicator';
+                    statusIndicator.style.backgroundColor = '#28a745';
+                    
+                    // Add the player name
+                    const nameSpan = document.createElement('span');
+                    nameSpan.textContent = playerName;
+                    
+                    listItem.appendChild(statusIndicator);
+                    listItem.appendChild(nameSpan);
+                    list.appendChild(listItem);
+                });
+                
+                listContainer.appendChild(list);
+            }
+            
+            treeView.appendChild(listContainer);
+            
+            // Update button states
+            document.querySelector('#expand-all').disabled = true;
+            document.querySelector('#collapse-all').disabled = true;
+            document.querySelector('#show-all').disabled = false;
+            document.querySelector('#list-online').disabled = true;
+        }
+
+        // Initialize when the DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            // Setup file input handler
+            const fileInput = document.getElementById('file-input');
+            fileInput.addEventListener('change', function(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                // Show loading message
+                document.getElementById('tree-view').innerHTML = '<div style="padding: 20px;">Loading allegiance data...</div>';
+                
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    try {
+                        // Parse the JSON file
+                        allegianceData = JSON.parse(e.target.result);
+                        
+                        // Calculate statistics
+                        const stats = calculateStats(allegianceData);
+                        updateStatsDisplay(stats);
+                        
+                        // Render the tree
+                        const treeView = document.getElementById('tree-view');
+                        treeView.innerHTML = ''; // Clear loading message
+                        renderTree(allegianceData, treeView);
+                        
+                        // Set up search functionality
+                        const searchInput = document.getElementById('search');
+                        searchInput.addEventListener('input', (e) => {
+                            filterTree(e.target.value);
+                        });
+                        
+                        // Set up button event listeners
+                        document.getElementById('list-online').addEventListener('click', listOnlinePlayers);
+                        document.getElementById('show-all').addEventListener('click', showAll);
+                        document.getElementById('expand-all').addEventListener('click', expandAll);
+                        document.getElementById('collapse-all').addEventListener('click', collapseAll);
+                        
+                        // Initially collapse deeper levels
+                        document.querySelectorAll('.node').forEach(node => {
+                            const level = getNodeLevel(node);
+                            if (level > 2) { // Collapse nodes deeper than level 2
+                                const childrenContainer = node.querySelector('.children');
+                                if (childrenContainer) {
+                                    childrenContainer.style.display = 'none';
+                                    const collapseBtn = node.querySelector('.collapse-btn');
+                                    if (collapseBtn) collapseBtn.textContent = '+';
+                                }
+                            }
+                        });
+                    } catch (error) {
+                        console.error('Error parsing JSON:', error);
+                        document.getElementById('tree-view').innerHTML = `
+                            <div class="error-message" style="color: red; padding: 20px;">
+                                <h3>Error Loading Data</h3>
+                                <p>${error.message}</p>
+                                <p>Make sure you've selected a valid JSON file with allegiance data.</p>
+                            </div>
+                        `;
+                    }
+                };
+                
+                reader.onerror = function() {
+                    document.getElementById('tree-view').innerHTML = `
+                        <div class="error-message" style="color: red; padding: 20px;">
+                            <h3>Error Loading File</h3>
+                            <p>Failed to read the file.</p>
+                        </div>
+                    `;
+                };
+                
+                // Read the file
+                reader.readAsText(file);
+            });
+            
+            document.getElementById('list-online').addEventListener('click', function() {
+                if (!allegianceData) {
+                    alert('Please load allegiance data first');
+                    return;
+                }
+                listOnlinePlayers();
+            });
+            
+            document.getElementById('show-all').addEventListener('click', function() {
+                if (!allegianceData) {
+                    alert('Please load allegiance data first');
+                    return;
+                }
+                showAll();
+            });
+            
+            document.getElementById('expand-all').addEventListener('click', function() {
+                if (!allegianceData) {
+                    alert('Please load allegiance data first');
+                    return;
+                }
+                expandAll();
+            });
+            
+            document.getElementById('collapse-all').addEventListener('click', function() {
+                if (!allegianceData) {
+                    alert('Please load allegiance data first');
+                    return;
+                }
+                collapseAll();
+            });
+        });
+    </script>
+</body>
+</html> 
